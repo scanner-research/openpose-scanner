@@ -1,6 +1,7 @@
 #include <scanner/api/op.h>
 #include <scanner/api/kernel.h>
 #include <scanner/util/opencv.h>
+#include <scanner/util/cuda.h>
 #include <openpose/headers.hpp>
 #include <opencv2/core/cuda.hpp>
 #include <iostream>
@@ -56,8 +57,10 @@ public:
     for (int i = 0; i < num_rows(frame_col); ++i) {
       datumsPtr->emplace_back();
       auto& datum = datumsPtr->at(datumsPtr->size()-1);
-      cv::cuda::GpuMat gpu_input = scanner::frame_to_gpu_mat(frame_col[i].as_const_frame());
-      datum.cvInputData = cv::Mat(gpu_input);
+      CUDA_PROTECT({
+          cv::cuda::GpuMat gpu_input = scanner::frame_to_gpu_mat(frame_col[i].as_const_frame());
+          datum.cvInputData = cv::Mat(gpu_input);
+        });
     }
 
     bool emplaced = opWrapper_.waitAndEmplace(datumsPtr);
