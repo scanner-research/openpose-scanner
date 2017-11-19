@@ -6,7 +6,7 @@
 #include <opencv2/core/cuda.hpp>
 #include <iostream>
 
-const std::string MODEL_DIR =  "/opt/openpose/models/";
+const std::string MODEL_DIR =  "/app/deps/openpose-models/";
 
 const int POSE_KEYPOINTS = 18;
 const int FACE_KEYPOINTS = 70;
