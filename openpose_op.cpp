@@ -5,6 +5,7 @@
 #include <openpose/headers.hpp>
 #include <opencv2/core/cuda.hpp>
 #include <iostream>
+#include "openpose.pb.h"
 
 const std::string MODEL_DIR =  "/app/deps/openpose-models/";
 
@@ -16,6 +17,12 @@ const int TOTAL_KEYPOINTS = POSE_KEYPOINTS + FACE_KEYPOINTS + 2 * HAND_KEYPOINTS
 class OpenPoseKernel : public scanner::BatchedKernel, public scanner::VideoKernel {
 public:
   OpenPoseKernel(const scanner::KernelConfig& config) : scanner::BatchedKernel(config), opWrapper_{op::ThreadManagerMode::Asynchronous}, device_(config.devices[0]) {
+    OpenPoseArgs args;
+    args.ParseFromArray(config.args.data(), config.args.size());
+
+    int scales = args.scales();
+    float step = 1.0/scales;
+
     const op::WrapperStructPose wrapperStructPose{
         true,
         {-1, 368},
@@ -23,8 +30,8 @@ public:
         op::ScaleMode::ZeroToOne,
         1,
         device_.id,
-        6,
-        0.16,
+        scales,
+        step,
         op::RenderMode::Cpu,
         op::PoseModel::COCO_18,
         false,
@@ -38,10 +45,10 @@ public:
         false};
 
     const op::WrapperStructFace wrapperStructFace{
-      true, {368, 368}, op::RenderMode::Cpu, 0.6, 0.7, 0.2};
+      args.face(), {368, 368}, op::RenderMode::Cpu, 0.6, 0.7, 0.2};
 
     const op::WrapperStructHand wrapperStructHand{
-      true, {368, 368}, 6, 0.4, false, op::RenderMode::Cpu, 0.6, 0.7, 0.2};
+      args.hands(), {368, 368}, scales, step, false, op::RenderMode::Cpu, 0.6, 0.7, 0.2};
 
     opWrapper_.configure(
       wrapperStructPose, wrapperStructFace, wrapperStructHand, op::WrapperStructInput{},
@@ -73,19 +80,26 @@ public:
       int num_people = datum.poseKeypoints.getSize(0);
       size_t size = num_people > 0 ? TOTAL_KEYPOINTS * num_people * 3 * sizeof(float) : 1;
       float* kp = new float[size / sizeof(float)];
+      std::memset(kp, 0, size);
       float* curr_kp = kp;
       for (int i = 0; i < num_people; ++i) {
         std::memcpy(curr_kp, datum.poseKeypoints.getPtr() + i * POSE_KEYPOINTS * 3,
                     POSE_KEYPOINTS * 3 * sizeof(float));
         curr_kp += POSE_KEYPOINTS * 3;
-        std::memcpy(curr_kp, datum.faceKeypoints.getPtr() + i * FACE_KEYPOINTS * 3,
-                    FACE_KEYPOINTS * 3 * sizeof(float));
+        if (datum.faceKeypoints.getPtr() != nullptr) {
+          std::memcpy(curr_kp, datum.faceKeypoints.getPtr() + i * FACE_KEYPOINTS * 3,
+                      FACE_KEYPOINTS * 3 * sizeof(float));
+        }
         curr_kp += FACE_KEYPOINTS * 3;
-        std::memcpy(curr_kp, datum.handKeypoints[0].getPtr() + i * HAND_KEYPOINTS * 3,
-                    HAND_KEYPOINTS * 3 * sizeof(float));
+        if (datum.handKeypoints[0].getPtr() != nullptr) {
+          std::memcpy(curr_kp, datum.handKeypoints[0].getPtr() + i * HAND_KEYPOINTS * 3,
+                      HAND_KEYPOINTS * 3 * sizeof(float));
+        }
         curr_kp += HAND_KEYPOINTS * 3;
-        std::memcpy(curr_kp, datum.handKeypoints[1].getPtr() + i * HAND_KEYPOINTS * 3,
-                    HAND_KEYPOINTS * 3 * sizeof(float));
+        if (datum.handKeypoints[1].getPtr() != nullptr) {
+          std::memcpy(curr_kp, datum.handKeypoints[1].getPtr() + i * HAND_KEYPOINTS * 3,
+                      HAND_KEYPOINTS * 3 * sizeof(float));
+        }
         curr_kp += HAND_KEYPOINTS * 3;
       }
 

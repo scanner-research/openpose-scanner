@@ -12,7 +12,8 @@ include(${SCANNER_PATH}/cmake/Util/Op.cmake)
 # points to a Protobuf file and will generate the C++ and Python bindings.
 build_op(
   LIB_NAME openpose_op
-  CPP_SRCS openpose_op.cpp)
+  CPP_SRCS openpose_op.cpp
+  PROTO_SRC openpose.proto)
 
 # The library specified in build_op is a normal CMake target, so you can use all
 # the normal CMake functions with it.

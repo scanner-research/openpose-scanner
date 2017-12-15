@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+message OpenPoseArgs {
+  bool face = 1;
+  bool hands = 2;
+  int32 scales = 3;
+}
