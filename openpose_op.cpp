@@ -32,7 +32,7 @@ public:
         device_.id,
         scales,
         step,
-        op::RenderMode::Cpu,
+        op::RenderMode::None,
         op::PoseModel::COCO_18,
         false,
         0.6,
@@ -45,10 +45,10 @@ public:
         false};
 
     const op::WrapperStructFace wrapperStructFace{
-      args.face(), {368, 368}, op::RenderMode::Cpu, 0.6, 0.7, 0.2};
+      args.face(), {368, 368}, op::RenderMode::None, 0.6, 0.7, 0.2};
 
     const op::WrapperStructHand wrapperStructHand{
-      args.hands(), {368, 368}, scales, step, false, op::RenderMode::Cpu, 0.6, 0.7, 0.2};
+      args.hands(), {368, 368}, scales, step, false, op::RenderMode::None, 0.6, 0.7, 0.2};
 
     opWrapper_.configure(
       wrapperStructPose, wrapperStructFace, wrapperStructHand, op::WrapperStructInput{},
