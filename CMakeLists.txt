@@ -4,9 +4,9 @@
 cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR)
 
 execute_process(
-  OUTPUT_VARIABLE SCANNER_CMAKE_DIR
-  COMMAND python -c "import scannerpy.stdlib.build_flags as b; b.get_cmake()")
-include(${SCANNER_CMAKE_DIR}/Op.cmake)
+  OUTPUT_VARIABLE SCANNER_CMAKE_FILE
+  COMMAND python -c "import scannerpy.stdlib.build_flags as b; print b.get_cmake()")
+include(${SCANNER_CMAKE_FILE})
 
 # build_op will create a shared library called lib${LIB_NAME}.so that builds
 # from all of the CPP_SRCS. You can also optionally specify a PROTO_SRC that
